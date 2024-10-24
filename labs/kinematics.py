@@ -20,6 +20,7 @@ a1, a2, a3, a4, a5, a6 = 0, 100, 0, 0, 0, 0
 # d values for each link given in mm
 d1, d2, d3, d4, d5, d6 = 136, 0, 0, 107, 0, 65
 
+# joint angles, left symbolic so they can be substituted later
 q1, q2, q3, q4, q5, q6 = symbols('q1 q2 q3 q4 q5 q6')
 
 # Formatted as [a, alpha d, theta]
@@ -47,7 +48,7 @@ def get_ypr(transformation):
             sp.asin(transformation[2, 0]), \
             sp.atan2(transformation[2, 1], transformation[2, 2])])
 
-def get_pose(transformation):
+def get_pose_ts(transformation):
     """x, y, z, yaw, pitch, roll"""
     return Matrix([get_translation(transformation), get_ypr(transformation)])
 
@@ -80,4 +81,4 @@ Td_test = Matrix([[1, 0, 0, 100],
                   [0, 0, 0, 1]])
 
 
-pprint(get_pose(Td_test).norm())
+pprint(get_pose_ts(Td_test).norm())
