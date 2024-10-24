@@ -75,10 +75,11 @@ def cyclic_coordinate_descent(T0EE_d, curr_joint_angles, state_func, error_thres
         ...
 
 
-Td_test = Matrix([[1, 0, 0, 100],
-                  [0, 1, 0, 100],
-                  [0, 0, 1, 100],
-                  [0, 0, 0, 1]])
+if __name__ == '__main__':
+    Td_test = Matrix([[1, 0, 0, 100],
+                    [0, 1, 0, 100],
+                    [0, 0, 1, 100],
+                    [0, 0, 0, 1]])
 
 
-pprint(get_pose_ts(Td_test).norm())
+    pprint(get_pose_ts(Td_test).norm())
