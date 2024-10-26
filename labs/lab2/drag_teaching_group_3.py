@@ -6,7 +6,7 @@ import csv
 STRAIGHT_UP = [0, 0, -90, 0, 0, 0]
 HOME = [0, 0, 0, 0, 0, 0]
 
-angles_xy_yz = [
+angles_xy_xz = [
     [3.25, 55.37, -1.58, -8.34, 31.2, -0.26],[],
     HOME,
     [36.21, 55.45, -1.58, 3.07, 29.97, -0.35],[],
@@ -28,7 +28,7 @@ angles_xy_yz = [
     [38.4, 39.9, 11.42, 122.25, 57.74, -0.35],[],
 ]
 
-angles_xz = [
+angles_yz = [
     [25.83, 40.78, 17.75, 13.27, -37.35, -0.26],
     [21.26, 70.66, -36.21, 9.05, -18.63, -0.26],[],
     [25.83, 40.78, 17.75, 13.27, -37.35, -0.26],
@@ -50,7 +50,7 @@ angles_xz = [
     [20.21, 5.53, 10.81, 5.36, -9.66, -0.26],
 ]
 
-angles_xz_2 = [
+angles_yz_2 = [
     HOME,
     [2.9, 19.42, -41.39, 14.06, 48.86, -0.26],
     [4.57, 35.06, -42.01, 12.91, 23.73, -0.26],[],
@@ -99,11 +99,11 @@ def main():
     sleep(2)
 
     for i in range(2):
-        follow_angle_path(arm, angles_xy_yz, speed=50, sleep_time=0.3)
+        follow_angle_path(arm, angles_xy_xz, speed=50, sleep_time=0.3)
 
         sleep(2)
 
-        follow_angle_path(arm, angles_xz_2, speed=50, sleep_time=0.3)
+        follow_angle_path(arm, angles_yz_2, speed=50, sleep_time=0.3)
 
         sleep(2)
         # actual_points.append(([], []))
