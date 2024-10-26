@@ -1,6 +1,5 @@
 from pymycobot import MechArm, PI_PORT, PI_BAUD
 from time import sleep
-import numpy as np
 import csv
 
 STRAIGHT_UP = [0, 0, -90, 0, 0, 0]
@@ -95,10 +94,10 @@ def main():
     sleep(2)
 
     arm.sync_send_angles(HOME, 50, timeout=3)
-    # arm.release_all_servos()
+    
     sleep(2)
 
-    for i in range(2):
+    for i in range(5):
         follow_angle_path(arm, angles_xy_xz, speed=50, sleep_time=0.3)
 
         sleep(2)
