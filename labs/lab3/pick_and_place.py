@@ -12,6 +12,7 @@ def main():
     sleep(2)
 
     q_init = arm.get_angles()
+    q_init = [0, 0, 0, 0, 0, 0]
 
     ik = inverse_kinematics(150,0,224, 0,0,0,q_init)
 

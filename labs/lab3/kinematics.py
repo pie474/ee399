@@ -39,8 +39,10 @@ DH_TABLE = [
 
 JOINT_ANGLE_OFFSETS = [0, -pi/2, 0, 0, 0, 0]
 
-JOINT_BOUNDS = Bounds(np.array([-168, -np.inf, -np.inf, -145, -np.inf, -np.inf]),
-                      np.array([168, np.inf, np.inf, 145, np.inf, np.inf]))
+JOINT_BOUNDS = Bounds(np.radians(np.array([-168, -np.inf, -np.inf, -145, -np.inf, -np.inf])),
+                      np.radians(np.array([168, np.inf, np.inf, 145, np.inf, np.inf])))
+
+JOINT_BOUNDS = (-np.inf, np.inf)
 
 T_FORWARD = sp.prod(dh_row_to_transformation(ai, alphai, di, thetai) for ai, alphai, di, thetai in DH_TABLE)
 # T_FORWARD = simplify(T_FORWARD)  # takes ~5 seconds to run, uncomment only if needed
@@ -127,27 +129,29 @@ def inverse_kinematics(x_target,y_target,z_target, rx_d, ry_d, rz_d, q_init, max
 
     all_args = (x_target,y_target,z_target, np.radians(rx_d), np.radians(ry_d), np.radians(rz_d))
     joint_angles = least_squares(all_error, q_init, args = all_args, method = 'trf',
-                                        max_nfev = max_iterations, ftol = tolerance,
-                                        bounds = JOINT_BOUNDS).x
+                                        max_nfev = max_iterations, ftol = tolerance, bounds = JOINT_BOUNDS
+                                        ).x
 
-    return list(np.degrees(joint_angles))
+    return np.degrees(joint_angles)
 
 
 if __name__ == '__main__':
     print('main begun')
     q_init = [0.1,0.1,0.1,0.1,0.1,0.1]
+    # q_init = [0, 0, 0, 0, 0, 0]
 
 
-    stream =[[0, 0, 0, 0, 0, 0, 150, 0, 224, 0, 0, 0],
-        [-10.01, 75.05, -87.45, 63.36, 75.67, 84.99, 212.5, 12.1, 149.1, 133.48, -57.36, 110.23],
-        [-12.39, 72.94, -87.45, 64.77, 87.8, 88.33, 200.6, 8.2, 154.2, 144.1, -60.19, 108.4],
-        [-4.74, 40.86, -3.51, 98.08, 47.54, 68.29, 182.8, 25.5, 115.4, -147.24, -65.36, 10.43],
-        [-9.49, 80.15, -87.36, 60.55, 79.8, 82.7, 211.0, 13.8, 127.1, 145.23, -56.13, 104.99],
-        [-12.74, 80.77, -87.45, 63.72, 92.28, 76.72, 199.9, 6.6, 126.0, 145.91, -57.57, 115.21],
-        [9.31, 73.91, -63.36, -71.36, 73.91, 57.12, 210.1, -17.6, 114.0, -121.28, 47.23, 178.63],
-        [14.32, 80.5, -62.75, -77.78, 85.25, 60.9, 201.5, -5.3, 98.0, -107.7, 42.37, -176.93],
-        [16.43, 78.75, -62.75, -74.97, 95.71, 53.26, 191.5, -0.1, 104.2, -105.5, 34.41, 177.67],
-        [10.89, 86.57, -62.75, -76.28, 75.49, 62.84, 205.9, -14.5, 72.9, -113.59, 39.59, -176.34]]
+    stream =[[0, 0, 0, 0, 0, 0, 150, 0, 224, 0, 0, 0]
+        # [-10.01, 75.05, -87.45, 63.36, 75.67, 84.99, 212.5, 12.1, 149.1, 133.48, -57.36, 110.23],
+        # [-12.39, 72.94, -87.45, 64.77, 87.8, 88.33, 200.6, 8.2, 154.2, 144.1, -60.19, 108.4],
+        # [-4.74, 40.86, -3.51, 98.08, 47.54, 68.29, 182.8, 25.5, 115.4, -147.24, -65.36, 10.43],
+        # [-9.49, 80.15, -87.36, 60.55, 79.8, 82.7, 211.0, 13.8, 127.1, 145.23, -56.13, 104.99],
+        # [-12.74, 80.77, -87.45, 63.72, 92.28, 76.72, 199.9, 6.6, 126.0, 145.91, -57.57, 115.21],
+        # [9.31, 73.91, -63.36, -71.36, 73.91, 57.12, 210.1, -17.6, 114.0, -121.28, 47.23, 178.63],
+        # [14.32, 80.5, -62.75, -77.78, 85.25, 60.9, 201.5, -5.3, 98.0, -107.7, 42.37, -176.93],
+        # [16.43, 78.75, -62.75, -74.97, 95.71, 53.26, 191.5, -0.1, 104.2, -105.5, 34.41, 177.67],
+        # [10.89, 86.57, -62.75, -76.28, 75.49, 62.84, 205.9, -14.5, 72.9, -113.59, 39.59, -176.34]
+        ]
 
     for data in stream: 
         x_target, y_target, z_target, rx_d, ry_d, rz_d = data[6], data[7], data[8], data[9], data[10], data[11]
@@ -155,7 +159,7 @@ if __name__ == '__main__':
         joint_angles = inverse_kinematics(x_target,y_target,z_target,rx_d,ry_d,rz_d,q_init)
         # print('calculated angles: ', np.degrees(joint_angles))
         # print('actual angles: ', actual_angles)
-        print(joint_angles)
+        print('angles:', joint_angles)
         actual_angles = np.radians(actual_angles)
         joint_angles = np.radians(joint_angles)
 
