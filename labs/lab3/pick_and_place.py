@@ -13,7 +13,7 @@ def main():
 
     q_init = arm.get_angles()
 
-    ik = inverse_kinematics(250,0,100, 0,0,0,q_init)
+    ik = inverse_kinematics(150,0,224, 0,0,0,q_init)
 
     arm.send_angles(ik)
 
