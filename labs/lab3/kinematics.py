@@ -154,8 +154,10 @@ if __name__ == '__main__':
         joint_angles = inverse_kinematics(x_target,y_target,z_target,rx_d,ry_d,rz_d,q_init)
         # print('calculated angles: ', np.degrees(joint_angles))
         # print('actual angles: ', actual_angles)
+        print(joint_angles)
         actual_angles = np.radians(actual_angles)
         joint_angles = np.radians(joint_angles)
+
         print('fwdkin on calc: ', forward_kinematics_func(joint_angles[0], joint_angles[1], joint_angles[2], joint_angles[3], joint_angles[4], joint_angles[5])[:3,3])
         print('fwdkin on actual: ', forward_kinematics_func(actual_angles[0], actual_angles[1], actual_angles[2], actual_angles[3], actual_angles[4], actual_angles[5])[:3,3])
 
