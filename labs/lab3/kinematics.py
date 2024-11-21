@@ -6,7 +6,7 @@ All units are mm or radians.
 import sympy as sp
 import numpy as np
 from sympy import symbols, cos, sin, pi, simplify, lambdify, Matrix, N
-from scipy.optimize import least_squares
+from scipy.optimize import least_squares, Bounds
 
 
 def dh_row_to_transformation(a, alpha, d, theta):
@@ -38,6 +38,9 @@ DH_TABLE = [
 ]
 
 JOINT_ANGLE_OFFSETS = [0, -pi/2, 0, 0, 0, 0]
+
+JOINT_BOUNDS = Bounds(np.array([-168, -np.inf, -np.inf, -np.inf, -np.inf, -np.inf]),
+                      np.array([168, np.inf, np.inf, np.inf, np.inf, np.inf]))
 
 T_FORWARD = sp.prod(dh_row_to_transformation(ai, alphai, di, thetai) for ai, alphai, di, thetai in DH_TABLE)
 # T_FORWARD = simplify(T_FORWARD)  # takes ~5 seconds to run, uncomment only if needed
@@ -123,8 +126,9 @@ def inverse_kinematics_bad(x_target,y_target,z_target, rx_d, ry_d, rz_d, q_init,
 def inverse_kinematics(x_target,y_target,z_target, rx_d, ry_d, rz_d, q_init, max_iterations = 100, tolerance = 1e-6):
 
     all_args = (x_target,y_target,z_target, np.radians(rx_d), np.radians(ry_d), np.radians(rz_d))
-    joint_angles = least_squares(all_error, q_init, args = all_args, method = 'lm',
-                                        max_nfev = max_iterations, ftol = tolerance).x
+    joint_angles = least_squares(all_error, q_init, args = all_args, method = 'trf',
+                                        max_nfev = max_iterations, ftol = tolerance,
+                                        bounds = JOINT_BOUNDS).x
 
     return np.degrees(joint_angles)
 
