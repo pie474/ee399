@@ -42,8 +42,6 @@ JOINT_ANGLE_OFFSETS = [0, -pi/2, 0, 0, 0, 0]
 JOINT_BOUNDS = Bounds(np.radians(np.array([-168, -np.inf, -np.inf, -145, -np.inf, -np.inf])),
                       np.radians(np.array([168, np.inf, np.inf, 145, np.inf, np.inf])))
 
-# JOINT_BOUNDS = (-np.inf, np.inf)
-
 T_FORWARD = sp.prod(dh_row_to_transformation(ai, alphai, di, thetai) for ai, alphai, di, thetai in DH_TABLE)
 # T_FORWARD = simplify(T_FORWARD)  # takes ~5 seconds to run, uncomment only if needed
 
@@ -74,34 +72,8 @@ q_sym = symbols('q1:7')
 # need angles in rads
 forward_kinematics_func = lambdify(q_sym, compute_forward_matrix(q_sym), 'numpy')
 
-# NOT NEEDED
-def position_error(q_position, x_target, y_target, z_target, link_lengths):
-    # Calculate forward kinematics for the first three links
-    q_position = np.radians(q_position)
-    T_values = forward_kinematics_func(q_position[0], q_position[1], q_position[2], 0, 0, 0)
-    # Extract the end-effector position from the transformation matrix
-    X, Y, Z = T_values[0,3], T_values[1,3], T_values[2,3]
-    # return an array of differences between calculated and target positions
-    return [x_target - X, y_target - Y, z_target - Z]
 
-# NOT NEEDED
-def orientation_error(q_orientation, rx_d, ry_d, rz_d):
-    # Calculate forward kinematics for the last three links
-    q_orientation_rads = np.radians(q_orientation)
-    # fwdkin needed in rads
-    T_values = forward_kinematics_func(0, 0, 0, q_orientation_rads[0], q_orientation_rads[1], q_orientation_rads[2])
-    # Complete the trig equations
-    # Extract the end-effector orientation from the transformation matrix
-    roll, pitch, yaw = np.arctan2(T_values[2][1],T_values[2][2]), \
-                        np.arctan2(-T_values[2][0], np.sqrt(T_values[0][0]**2+T_values[1][0]**2)), \
-                        np.arctan2(T_values[1][0],T_values[0][0])
-    # yaw, pitch, roll = get_ypr(T_values)
-    #return an array of differences between calculated and target orientations
-    roll_deg, pitch_deg, yaw_deg = np.degrees(roll), np.degrees(pitch), np.degrees(yaw)
-    return [rx_d - roll_deg, ry_d - pitch_deg, rz_d - yaw_deg]
-
-
-def all_error(q,  x_target, y_target, z_target, rx_d, ry_d, rz_d):
+def pose_error(q,  x_target, y_target, z_target, rx_d, ry_d, rz_d):
     T_values = forward_kinematics_func(q[0],q[1], q[2], q[3], q[4],q[5])
     roll,pitch,yaw = np.arctan2(T_values[2,1],T_values[2,2]),np.arctan2(-T_values[2,0],
                     np.sqrt(T_values[0,0]**2+T_values[1,0]**2)), np.arctan2(T_values[1,0],T_values[0,0])
@@ -109,26 +81,12 @@ def all_error(q,  x_target, y_target, z_target, rx_d, ry_d, rz_d):
     return [X-x_target, Y-y_target, Z-z_target, roll-rx_d, pitch-ry_d, yaw - rz_d]
 
 
-def inverse_kinematics_bad(x_target,y_target,z_target, rx_d, ry_d, rz_d, q_init, link_lengths, max_iterations = 100, tolerance = 1e-6):
-    position_args = (x_target,y_target,z_target,link_lengths)
-    q_init = np.radians(q_init)
-    q_position_solution = least_squares(position_error, q_init[:3], args = position_args, method = 'lm', 
-                                        max_nfev = max_iterations, ftol = tolerance).x
-    
-    orientation_args = np.radians((rx_d,ry_d,rz_d))
-    q_orientation_solution = least_squares(orientation_error, q_init[3:], args = orientation_args, method = 'lm',
-                                        max_nfev = max_iterations, ftol = tolerance).x
-    
-    joint_angles = np.degrees(np.concatenate((q_position_solution, q_orientation_solution)))
-
-    return np.degrees(joint_angles)
-
 # this one works, most important think is that all math should be done in radians and the error should not be split
 # into two seperate pieces 
 def inverse_kinematics(x_target,y_target,z_target, rx_d, ry_d, rz_d, q_init, max_iterations = 100, tolerance = 1e-6):
 
     all_args = (x_target,y_target,z_target, np.radians(rx_d), np.radians(ry_d), np.radians(rz_d))
-    joint_angles = least_squares(all_error, q_init, args = all_args, method = 'trf',
+    joint_angles = least_squares(pose_error, q_init, args = all_args, method = 'trf',
                                         max_nfev = max_iterations, ftol = tolerance, bounds = JOINT_BOUNDS
                                         ).x
 
