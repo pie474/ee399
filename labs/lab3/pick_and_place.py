@@ -16,7 +16,7 @@ def main():
 
     ik = inverse_kinematics(150,0,224, 0,0,0,q_init)
 
-    arm.send_angles(ik)
+    arm.send_angles(list(ik), 40)
 
 
 
