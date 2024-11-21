@@ -42,7 +42,7 @@ JOINT_ANGLE_OFFSETS = [0, -pi/2, 0, 0, 0, 0]
 JOINT_BOUNDS = Bounds(np.radians(np.array([-168, -np.inf, -np.inf, -145, -np.inf, -np.inf])),
                       np.radians(np.array([168, np.inf, np.inf, 145, np.inf, np.inf])))
 
-JOINT_BOUNDS = (-np.inf, np.inf)
+# JOINT_BOUNDS = (-np.inf, np.inf)
 
 T_FORWARD = sp.prod(dh_row_to_transformation(ai, alphai, di, thetai) for ai, alphai, di, thetai in DH_TABLE)
 # T_FORWARD = simplify(T_FORWARD)  # takes ~5 seconds to run, uncomment only if needed
