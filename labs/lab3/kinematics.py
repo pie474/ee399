@@ -130,7 +130,7 @@ def inverse_kinematics(x_target,y_target,z_target, rx_d, ry_d, rz_d, q_init, max
                                         max_nfev = max_iterations, ftol = tolerance,
                                         bounds = JOINT_BOUNDS).x
 
-    return np.degrees(joint_angles)
+    return list(np.degrees(joint_angles))
 
 
 if __name__ == '__main__':
