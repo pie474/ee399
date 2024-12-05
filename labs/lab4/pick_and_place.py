@@ -4,20 +4,21 @@ from utils import *
 
 def main():
     arm = connect_arm()
-
+    print("Arm connected")
     sleep(2)
 
     arm.sync_send_angles(STRAIGHT_UP, 60)
 
     sleep(2)
-
-    q_init = get_angles(arm)
+    # print(get_coords(arm))
+    # q_init = get_angles(arm)
     q_init = [0, 0, 0, 0, 0, 0]
 
     sleep(2)
-
-    ik = inverse_kinematics(150,0,224, 0,0,0,q_init).tolist()
-
+    print("trying IK")
+    ik = inverse_kinematics(0,0,374, 0,0,0,q_init).tolist()
+    print("sending IK")
+    print(ik)
     arm.send_angles(ik, 40)
 
     # arm.send_angles([0, 0, 0, 0, 0, 0], 60)
