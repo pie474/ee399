@@ -1,22 +1,9 @@
 from time import sleep
-from pymycobot import MyCobotSocket
 from kinematics import *
-
-STRAIGHT_UP = [0, 0, -90, 0, 0, 0]
-
-def get_angles(arm):
-    angles = None
-    while not angles or angles == -1:
-        try:
-            angles = arm.get_angles()
-        except:
-            print('retrying angle getter')
-    return angles
+from utils import *
 
 def main():
-    ip_addr = "10.19.108.58"
-    arm = MyCobotSocket(ip_addr, 9000)
-    arm.connect_socket()
+    arm = connect_arm()
 
     sleep(2)
 
