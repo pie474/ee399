@@ -22,7 +22,7 @@ a1, a2, a3, a4, a5, a6 = 0, 100, 10, 0, 0, 0
 
 # d values for each link given in mm
 # d1, d2, d3, d4, d5, d6 = 136, 0, 0, 107, 0, 65  # obtained via datasheets
-d1, d2, d3, d4, d5, d6 = 114, 0, 0, 96, 0, 54  # obtained experimentally
+d1, d2, d3, d4, d5, d6 = 114, 0, 0, 96, 0, 54 + 95  # obtained experimentally
 
 # joint angles, left symbolic so they can be substituted later
 q1, q2, q3, q4, q5, q6 = symbols('q1 q2 q3 q4 q5 q6')
@@ -36,6 +36,12 @@ DH_TABLE = [
     [a5, -pi/2, d5, q5],  # J5
     [a6,     0, d6, q6]   # J6 (End effector)
 ]
+T_GRIPPER = Matrix([
+        [1, 0, 0, 95],
+        [0, 1, 0, 0],
+        [0, 0, 1, 0],
+        [0, 0, 0, 1]
+    ])
 
 T_TOOL = sp.eye(4)
 
@@ -43,6 +49,10 @@ JOINT_ANGLE_OFFSETS = [0, -pi/2, 0, 0, 0, 0]
 
 JOINT_BOUNDS = (np.radians(np.array([-165, -90, -180, -165, -115, -175])),
                       np.radians(np.array([165, 90, 70, 165, 115, 175])))
+
+shrink = 25
+JOINT_BOUNDS = (JOINT_BOUNDS[0] + np.radians(np.ones(6)*shrink),
+                JOINT_BOUNDS[1] - np.radians(np.ones(6)*shrink))
 
 T_FORWARD = sp.prod(dh_row_to_transformation(ai, alphai, di, thetai) for ai, alphai, di, thetai in DH_TABLE)
 # T_FORWARD = simplify(T_FORWARD)  # takes ~5 seconds to run, uncomment only if needed
@@ -78,13 +88,13 @@ def set_tool(t_tool: Matrix | None = None):
     global T_TOOL, T_FORWARD, forward_kinematics_func, q_sym
     if t_tool:
         T_TOOL = t_tool
-    T_FORWARD = sp.prod([dh_row_to_transformation(ai, alphai, di, thetai) for ai, alphai, di, thetai in DH_TABLE].append(T_TOOL))
+    T_FORWARD = sp.prod(dh_row_to_transformation(ai, alphai, di, thetai) for ai, alphai, di, thetai in DH_TABLE) * T_TOOL
     forward_kinematics_func = lambdify(q_sym, compute_forward_matrix(q_sym), 'numpy')
 
 set_tool()
 
 def pose_error(q,  x_target, y_target, z_target, rx_d, ry_d, rz_d):
-    angle_weight = 30
+    angle_weight = 40
     T_values = forward_kinematics_func(q[0],q[1], q[2], q[3], q[4],q[5])
     roll,pitch,yaw = np.arctan2(T_values[2,1],T_values[2,2]),np.arctan2(-T_values[2,0],
                     np.sqrt(T_values[0,0]**2+T_values[1,0]**2)), np.arctan2(T_values[1,0],T_values[0,0])
@@ -94,7 +104,7 @@ def pose_error(q,  x_target, y_target, z_target, rx_d, ry_d, rz_d):
 
 # this one works, most important think is that all math should be done in radians and the error should not be split
 # into two seperate pieces 
-def inverse_kinematics(x_target,y_target,z_target, rx_d, ry_d, rz_d, q_init, max_iterations = 1000, tolerance = 1e-6):
+def inverse_kinematics(x_target,y_target,z_target, rx_d, ry_d, rz_d, q_init, max_iterations = 1000, tolerance = 1e-7):
     q_init_rad = np.clip(np.radians(np.array(q_init)), *JOINT_BOUNDS)
     all_args = (x_target,y_target,z_target, np.radians(rx_d), np.radians(ry_d), np.radians(rz_d))
     solution = least_squares(pose_error, q_init_rad, args = all_args, method = 'trf',

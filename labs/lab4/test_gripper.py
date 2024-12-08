@@ -10,15 +10,15 @@ from utils import *
     # arm.send_angles([0, 0, 0, 0, 0, 0], 60)
 
 def test(arm):
-    arm.sync_send_angles(HOME, 60)
+    arm.sync_send_angles(HOME, 60, timeout=4)
+    # sleep(2)
+    # arm.set_gripper_state(1, 50, 1)
+    # sleep(2)
+    # arm.set_gripper_state(0, 5, 1)
+    # sleep(2)
+    # arm.set_gripper_state(1, 50, 1)
     sleep(2)
-    arm.set_gripper_state(1, 50, 1)
-    sleep(2)
-    arm.set_gripper_state(0, 5, 1)
-    sleep(2)
-    arm.set_gripper_state(1, 50, 1)
-    sleep(2)
-    arm.sync_send_angles(STRAIGHT_UP, 60)
+    arm.sync_send_angles( [-31.577, 17.22, 56.76, 0, 74.91, -5.41], 60, timeout=4)
 
 def pick_and_place(arm):
     arm.sync_send_angles(HOME, 60)
@@ -45,7 +45,7 @@ def main():
     arm = connect_arm()
     print("Arm connected")
     sleep(2)
-    pick_and_place(arm)
+    test(arm)
 
 
 
