@@ -39,8 +39,8 @@ DH_TABLE = [
 
 JOINT_ANGLE_OFFSETS = [0, -pi/2, 0, 0, 0, 0]
 
-JOINT_BOUNDS = Bounds(np.radians(np.array([-168, -np.inf, -np.inf, -145, -np.inf, -np.inf])),
-                      np.radians(np.array([168, np.inf, np.inf, 145, np.inf, np.inf])))
+JOINT_BOUNDS = (np.radians(np.array([-165, -90, -180, -165, -115, -175])),
+                      np.radians(np.array([165, 90, 70, 165, 115, 175])))
 
 T_FORWARD = sp.prod(dh_row_to_transformation(ai, alphai, di, thetai) for ai, alphai, di, thetai in DH_TABLE)
 # T_FORWARD = simplify(T_FORWARD)  # takes ~5 seconds to run, uncomment only if needed
@@ -48,11 +48,11 @@ T_FORWARD = sp.prod(dh_row_to_transformation(ai, alphai, di, thetai) for ai, alp
 def get_translation(transformation):
     return transformation[:3, 3]
 
-def get_ypr(transformation):
-    """Returns yaw pitch roll values"""
-    return  Matrix([sp.atan2(transformation[1, 0], transformation[0, 0]), \
+def get_rpy(transformation):
+    """Returns roll pitch yaw values"""
+    return  Matrix([sp.atan2(transformation[2, 1], transformation[2, 2]), \
             sp.asin(transformation[2, 0]), \
-            sp.atan2(transformation[2, 1], transformation[2, 2])])
+            sp.atan2(transformation[1, 0], transformation[0, 0])])
 
 def get_pose_ts(transformation):
     """x, y, z, yaw, pitch, roll"""
@@ -74,23 +74,29 @@ forward_kinematics_func = lambdify(q_sym, compute_forward_matrix(q_sym), 'numpy'
 
 
 def pose_error(q,  x_target, y_target, z_target, rx_d, ry_d, rz_d):
+    angle_weight = 30
     T_values = forward_kinematics_func(q[0],q[1], q[2], q[3], q[4],q[5])
     roll,pitch,yaw = np.arctan2(T_values[2,1],T_values[2,2]),np.arctan2(-T_values[2,0],
                     np.sqrt(T_values[0,0]**2+T_values[1,0]**2)), np.arctan2(T_values[1,0],T_values[0,0])
     X, Y, Z = T_values[0, 3], T_values[1, 3], T_values[2, 3]
-    return [X-x_target, Y-y_target, Z-z_target, roll-rx_d, pitch-ry_d, yaw - rz_d]
+    return [X-x_target, Y-y_target, Z-z_target, (roll-rx_d)*angle_weight, (pitch-ry_d)*angle_weight, (yaw - rz_d)*angle_weight]
 
 
 # this one works, most important think is that all math should be done in radians and the error should not be split
 # into two seperate pieces 
-def inverse_kinematics(x_target,y_target,z_target, rx_d, ry_d, rz_d, q_init, max_iterations = 100, tolerance = 1e-6):
-
+def inverse_kinematics(x_target,y_target,z_target, rx_d, ry_d, rz_d, q_init, max_iterations = 1000, tolerance = 1e-6):
+    q_init_rad = np.clip(np.radians(np.array(q_init)), *JOINT_BOUNDS)
     all_args = (x_target,y_target,z_target, np.radians(rx_d), np.radians(ry_d), np.radians(rz_d))
-    joint_angles = least_squares(pose_error, q_init, args = all_args, method = 'trf',
+    solution = least_squares(pose_error, q_init_rad, args = all_args, method = 'trf',
                                         max_nfev = max_iterations, ftol = tolerance, bounds = JOINT_BOUNDS,
-                                        x_scale=(1, 1, 1, 60, 60, 60)).x
+                                        # x_scale=(60, 60, 60, 1, 1, 1)
+                                        )
+    print(f'Solution found? {solution.success}')
+    print(f'{solution.nfev} iterations')
+    print(f'Residuals: {solution.fun}')
+    print(f'Final cost: {solution.cost}')
 
-    return np.degrees(joint_angles)
+    return np.degrees(solution.x)
 
 
 if __name__ == '__main__':
@@ -100,7 +106,7 @@ if __name__ == '__main__':
 
 
     stream =[[0, 0, 0, 0, 0, 0, 150, 0, 224, 0, 0, 0]
-        # [-10.01, 75.05, -87.45, 63.36, 75.67, 84.99, 212.5, 12.1, 149.1, 133.48, -57.36, 110.23],
+        # [-10.01, 75.05, -87.45, 63.36+ [0, 0, 0], 75.67, 84.99, 212.5, 12.1, 149.1, 133.48, -57.36, 110.23],
         # [-12.39, 72.94, -87.45, 64.77, 87.8, 88.33, 200.6, 8.2, 154.2, 144.1, -60.19, 108.4],
         # [-4.74, 40.86, -3.51, 98.08, 47.54, 68.29, 182.8, 25.5, 115.4, -147.24, -65.36, 10.43],
         # [-9.49, 80.15, -87.36, 60.55, 79.8, 82.7, 211.0, 13.8, 127.1, 145.23, -56.13, 104.99],

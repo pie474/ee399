@@ -1,14 +1,17 @@
 from time import sleep
-from pymycobot import MyCobotSocket
+from pymycobot import MyCobotSocket, MechArmSocket
 from kinematics import *
 
 HOME = [0,0,0,0,0,0]
 STRAIGHT_UP = [0,0,-90,0,0,0]
 
-def connect_arm(ip='10.19.77.243'):
-    arm = MyCobotSocket(ip, 9000)
-    arm.connect_socket()
-    sleep(2)
+def connect_arm(ip='10.19.77.243', type = 0):
+    if type: 
+        arm = MyCobotSocket(ip, 9000)
+        arm.connect_socket()
+    else: 
+        arm = MechArmSocket(ip)
+    sleep(0.5)
     return arm
 
 def get_angles(arm):
