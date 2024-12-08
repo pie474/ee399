@@ -50,7 +50,7 @@ JOINT_ANGLE_OFFSETS = [0, -pi/2, 0, 0, 0, 0]
 JOINT_BOUNDS = (np.radians(np.array([-165, -90, -180, -165, -115, -175])),
                       np.radians(np.array([165, 90, 70, 165, 115, 175])))
 
-shrink = 25
+shrink = 10
 JOINT_BOUNDS = (JOINT_BOUNDS[0] + np.radians(np.ones(6)*shrink),
                 JOINT_BOUNDS[1] - np.radians(np.ones(6)*shrink))
 
@@ -63,12 +63,12 @@ def get_translation(transformation):
 def get_rpy(transformation):
     """Returns roll pitch yaw values"""
     return  Matrix([sp.atan2(transformation[2, 1], transformation[2, 2]), \
-            sp.asin(transformation[2, 0]), \
+            sp.asin(-transformation[2, 0]), \
             sp.atan2(transformation[1, 0], transformation[0, 0])])
 
 def get_pose_ts(transformation):
     """x, y, z, yaw, pitch, roll"""
-    return Matrix([get_translation(transformation), get_ypr(transformation)])
+    return Matrix([get_translation(transformation), get_rpy(transformation)])
 
 
 # angles should be given in rads
@@ -94,7 +94,7 @@ def set_tool(t_tool: Matrix | None = None):
 set_tool()
 
 def pose_error(q,  x_target, y_target, z_target, rx_d, ry_d, rz_d):
-    angle_weight = 40
+    angle_weight = 40  # 40
     T_values = forward_kinematics_func(q[0],q[1], q[2], q[3], q[4],q[5])
     roll,pitch,yaw = np.arctan2(T_values[2,1],T_values[2,2]),np.arctan2(-T_values[2,0],
                     np.sqrt(T_values[0,0]**2+T_values[1,0]**2)), np.arctan2(T_values[1,0],T_values[0,0])
@@ -104,17 +104,23 @@ def pose_error(q,  x_target, y_target, z_target, rx_d, ry_d, rz_d):
 
 # this one works, most important think is that all math should be done in radians and the error should not be split
 # into two seperate pieces 
-def inverse_kinematics(x_target,y_target,z_target, rx_d, ry_d, rz_d, q_init, max_iterations = 1000, tolerance = 1e-7):
+def inverse_kinematics(x_target,y_target,z_target, rx_d, ry_d, rz_d, q_init, max_iterations = 200, tolerance = 1e-8, debug=False):
     q_init_rad = np.clip(np.radians(np.array(q_init)), *JOINT_BOUNDS)
     all_args = (x_target,y_target,z_target, np.radians(rx_d), np.radians(ry_d), np.radians(rz_d))
     solution = least_squares(pose_error, q_init_rad, args = all_args, method = 'trf',
                                         max_nfev = max_iterations, ftol = tolerance, bounds = JOINT_BOUNDS,
                                         # x_scale=(60, 60, 60, 1, 1, 1)
                                         )
-    print(f'Solution found? {solution.success}')
-    print(f'{solution.nfev} iterations')
-    print(f'Residuals: {solution.fun}')
-    print(f'Final cost: {solution.cost}')
+    if debug:
+        bound_dists = np.degrees(np.min([np.abs(np.array(solution.x)-JOINT_BOUNDS[0]), 
+                                        np.abs(np.array(solution.x)-JOINT_BOUNDS[1])],
+                                        axis=0))
+        print(f'Solution found?        {solution.success}')
+        print(f'IK Solution:           {np.degrees(solution.x)}')
+        print(f'Distance from bounds:  {bound_dists}')
+        print(f'Iterations:            {solution.nfev}')
+        print(f'Residuals:             {solution.fun}')
+        print(f'Final cost:            {solution.cost}')
 
     return np.degrees(solution.x)
 
