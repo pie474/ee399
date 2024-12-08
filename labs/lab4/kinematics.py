@@ -37,6 +37,8 @@ DH_TABLE = [
     [a6,     0, d6, q6]   # J6 (End effector)
 ]
 
+T_TOOL = sp.eye(4)
+
 JOINT_ANGLE_OFFSETS = [0, -pi/2, 0, 0, 0, 0]
 
 JOINT_BOUNDS = (np.radians(np.array([-165, -90, -180, -165, -115, -175])),
@@ -70,8 +72,16 @@ def compute_forward_matrix(joint_angles):
 q_sym = symbols('q1:7')
 
 # need angles in rads
-forward_kinematics_func = lambdify(q_sym, compute_forward_matrix(q_sym), 'numpy')
+forward_kinematics_func = None
 
+def set_tool(t_tool: Matrix | None = None):
+    global T_TOOL, T_FORWARD, forward_kinematics_func, q_sym
+    if t_tool:
+        T_TOOL = t_tool
+    T_FORWARD = sp.prod([dh_row_to_transformation(ai, alphai, di, thetai) for ai, alphai, di, thetai in DH_TABLE].append(T_TOOL))
+    forward_kinematics_func = lambdify(q_sym, compute_forward_matrix(q_sym), 'numpy')
+
+set_tool()
 
 def pose_error(q,  x_target, y_target, z_target, rx_d, ry_d, rz_d):
     angle_weight = 30
@@ -127,8 +137,8 @@ if __name__ == '__main__':
         actual_angles = np.radians(actual_angles)
         joint_angles = np.radians(joint_angles)
 
-        print('fwdkin on calc: ', forward_kinematics_func(joint_angles[0], joint_angles[1], joint_angles[2], joint_angles[3], joint_angles[4], joint_angles[5])[:3,3])
-        print('fwdkin on actual: ', forward_kinematics_func(actual_angles[0], actual_angles[1], actual_angles[2], actual_angles[3], actual_angles[4], actual_angles[5])[:3,3])
+        print('fwdkin on calc: ', forward_kinematics_func(*joint_angles[:6])[:3,3])
+        print('fwdkin on actual: ', forward_kinematics_func(*actual_angles[:6])[:3,3])
 
 
 # print("Joint Angles (Degrees):")
