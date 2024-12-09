@@ -34,13 +34,13 @@ def get_coords(arm):
             print('retrying coords getter')
     return coords
 
-def go_to(arm, pos, pitch=0, timeout=5):
+def go_to(arm, pos, speed=60, pitch=0, timeout=5):
     q_init = get_angles(arm)
     rot = get_grab_orientation(pos, pitch)
     print(f'Going to {pos, rot}')
     ik = inverse_kinematics(*pos, *rot, q_init, debug=True).tolist()
-    arm.sync_send_angles(ik, 60, timeout=timeout)
-    # arm.send_angles(ik, 60)
+    arm.sync_send_angles(ik, speed, timeout=timeout)
+    # arm.send_angles(ik, speed)
     # sleep(timeout)
     fk = compute_forward_matrix(radians(get_angles(arm)))
     actual_pos = get_translation(fk).flat()

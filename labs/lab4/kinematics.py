@@ -112,13 +112,18 @@ def inverse_kinematics(x_target,y_target,z_target, rx_d, ry_d, rz_d, q_init, max
                                         # x_scale=(60, 60, 60, 1, 1, 1)
                                         )
     if debug:
+        if not solution.success:
+            print(f'<<<<<SOLUTION NOT FOUND>>>>>')
+        
+        iter_thresh = 100
+        if solution.nfev > iter_thresh:
+            print(f'<<<<<ITERATION THRESHOLD EXCEEDED ({solution.nfev} > {iter_thresh})>>>>>')
+        
         bound_dists = np.degrees(np.min([np.abs(np.array(solution.x)-JOINT_BOUNDS[0]), 
                                         np.abs(np.array(solution.x)-JOINT_BOUNDS[1])],
                                         axis=0))
-        print(f'Solution found?        {solution.success}')
         print(f'IK Solution:           {np.degrees(solution.x)}')
         print(f'Distance from bounds:  {bound_dists}')
-        print(f'Iterations:            {solution.nfev}')
         print(f'Residuals:             {solution.fun}')
         print(f'Final cost:            {solution.cost}')
 

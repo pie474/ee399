@@ -12,7 +12,7 @@ CUBE_SIZE = 50
 def get_cube(arm):
     open(arm)
     go_to(arm, offset(PICKUP_LOC, [0, 0, 100]))
-    go_to(arm, PICKUP_LOC)
+    go_to(arm, PICKUP_LOC, speed=30)
     close(arm)
     go_to(arm, MIDPOINT_LOC)
 
@@ -44,7 +44,9 @@ def main():
     
     sleep(1)
 
-    cube_routine(arm)
+    # cube_routine(arm)
+    get_cube(arm)
+    
 
     # for i in range(6):
     #     hole_pos = get_hole_pos_wf(i)
