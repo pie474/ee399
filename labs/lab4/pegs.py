@@ -53,6 +53,14 @@ def peg_routine(arm):
         get_peg(arm)
         place_peg(arm, i)
 
+def hammer_routine(arm):
+    get_peg(arm)
+    for i in range(6):
+        hole_pos = get_hole_pos_wf(i)
+        go_to(arm, offset(hole_pos, [0, 0, 90]), pitch=GRAB_PITCH)
+        go_to(arm, offset(hole_pos, [0, 0, 50]), pitch=GRAB_PITCH)
+        go_to(arm, offset(hole_pos, [0, 0, 90]), pitch=GRAB_PITCH)
+
 def main():
     arm = connect_arm()
 
