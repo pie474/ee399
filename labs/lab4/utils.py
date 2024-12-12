@@ -35,6 +35,9 @@ def get_coords(arm):
     return coords
 
 def go_to(arm, pos, speed=60, pitch=0, timeout=5):
+    """Given a world frame position, compute the inverse kinematics and go to the resulting 
+        joint angles synchronously. Roll is locked to 0, and yaw is locked to pointing away from the robot.
+    """
     q_init = get_angles(arm)
     rot = get_grab_orientation(pos, pitch)
     print(f'Going to {pos, rot}')
@@ -51,18 +54,27 @@ def get_grab_orientation(pos, pitch):
     return [0, pitch+90, degrees(atan2(pos[1], pos[0]))]
 
 def open(arm):
+    """Open the arm's gripper."""
     arm.set_gripper_state(0, 50, 1)
     sleep(0.1)
 
 def close(arm):
+    """Close the arm's gripper."""
     arm.set_gripper_state(1, 50, 1)
     sleep(0.1)
 
 def offset(pos, offset):
+    """Stupid method to add the elements of two position arrays 
+    (can be avoided by using numpy arrays for positions)
+    """
     assert len(pos) == 3
     return [x + o for x, o, in zip(pos, offset)]
 
 def calibrate_pos(arm, pos, z_offset = 100):
+    """Go to a reference point some offset above the given point. 
+    This was originally intended to allow the user to provide feedback on the true location of the given point,
+        but simply adjusting the prop physically proved to be easier.
+    """
     offset_pos = offset(pos, [0, 0, z_offset])
     go_to(arm, offset_pos)
     input(f'waiting at position {offset_pos}')
